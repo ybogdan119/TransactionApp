@@ -1,0 +1,17 @@
+TransactionId,Status,Type,ClientName,Amount
+1,Completed,Withdrawal,Dale Cotton,$28.43
+2,Completed,Refill,Paul Carter,$45.16
+3,Completed,Refill,Caldwell Reid,$63.00
+4,Completed,Refill,Quentin Bonner,$64.52
+5,Completed,Withdrawal,Colt Joyce,$70.67
+6,Completed,Refill,Neil Walls,$99.36
+7,Completed,Refill,Slade Rios,$52.60
+8,Completed,Withdrawal,Graham Harrell,$47.51
+9,Completed,Withdrawal,Kirk Byers,$96.35
+10,Completed,Withdrawal,Holmes Howell,$93.81
+11,Completed,Refill,Flynn Whitley,$95.75
+12,Completed,Refill,Chase Salas,$95.25
+13,Completed,Withdrawal,Aquila Skinner,$69.47
+14,Completed,Refill,Len Snyder,$78.59
+100,Completed,Refill,Dima Snyder,$100.59
+150,Waiting,Withdrawal,Nikita Snyder,$728.59

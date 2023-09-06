@@ -50,7 +50,7 @@ namespace TransactionAPI.Services
         {
             var transactions = new List<Transaction>();
 
-            using (var memoryStream = new MemoryStream())
+            await using (var memoryStream = new MemoryStream())
             {
                 await file.CopyToAsync(memoryStream);
                 var fileExtension = Path.GetExtension(file.FileName);

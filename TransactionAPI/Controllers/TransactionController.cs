@@ -75,7 +75,6 @@ namespace TransactionAPI.Controllers
                 return NotFound();
             }
 
-
             Response.Clear();
             Response.ContentType = "text/csv";
             Response.Headers.Add("Content-Disposition", "attachment; filename=exported_data.csv");

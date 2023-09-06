@@ -7,9 +7,9 @@ using TransactionAPI.Models;
 
 namespace TransactionAPI.Services
 {
-    public class TransactionReaderService
+    public class TransactionReaderService : ITransactionReaderService
     {
-        public IEnumerable<Transaction>? ReadTransactions(IFormFile file)
+        public async Task<IEnumerable<Transaction>?> ReadTransactionsAsync(IFormFile file)
         {
             if (file == null || file.Length <= 0)
             {
@@ -17,38 +17,42 @@ namespace TransactionAPI.Services
             }
 
             string ext = Path.GetExtension(file.FileName);
-            IEnumerable<Transaction> transactions;
+            IEnumerable<Transaction>? transactions = null;
 
             if (ext == ".xls" || ext == ".xlsx")
             {
-                transactions = GetTrasnactionsFromExcel(file);
+                transactions = await GetTrasnactionsFromExcelAsync(file);
             }
             else if (ext == ".csv")
             {
-                transactions = GetTrasnactionsFromCsv(file);
+                transactions = await GetTrasnactionsFromCsvAsync(file);
             }
-            else
-            {
-                return null;
-            }
+
             return transactions;
         }
 
-        private IEnumerable<Transaction> GetTrasnactionsFromCsv(IFormFile file)
+        private Task<IEnumerable<Transaction>?> GetTrasnactionsFromCsvAsync(IFormFile file)
         {
-            using var reader = new StreamReader(file.OpenReadStream());
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            try
+            {
+                using var reader = new StreamReader(file.OpenReadStream());
+                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-            return csv.GetRecords<Transaction>().ToList();
+                return Task.FromResult<IEnumerable<Transaction>?>(csv.GetRecords<Transaction>().ToList());
+            }
+            catch (CsvHelperException)
+            {
+                return Task.FromResult<IEnumerable<Transaction>?>(null);
+            }
         }
 
-        private IEnumerable<Transaction> GetTrasnactionsFromExcel(IFormFile file)
+        private async Task<IEnumerable<Transaction>?> GetTrasnactionsFromExcelAsync(IFormFile file)
         {
             var transactions = new List<Transaction>();
 
             using (var memoryStream = new MemoryStream())
             {
-                file.CopyTo(memoryStream);
+                await file.CopyToAsync(memoryStream);
                 var fileExtension = Path.GetExtension(file.FileName);
 
                 using (var fs = new MemoryStream(memoryStream.ToArray()))
@@ -56,37 +60,43 @@ namespace TransactionAPI.Services
                     IWorkbook workbook;
                     if (fileExtension == ".xlsx")
                     {
-                        workbook = new XSSFWorkbook(fs); // Для XLSX
+                        workbook = new XSSFWorkbook(fs);
                     }
                     else if (fileExtension == ".xls")
                     {
-                        workbook = new HSSFWorkbook(fs); // Для XLS
+                        workbook = new HSSFWorkbook(fs);
                     }
                     else
                     {
-                        // Обработка неподдерживаемых форматов
-                        throw new Exception("Неподдерживаемый формат файла.");
+                        throw new Exception("Unsupported media type.");
                     }
 
-                    ISheet sheet = workbook.GetSheetAt(0); // Выберите нужный лист
+                    ISheet sheet = workbook.GetSheetAt(0);
 
-                    for (int row = 1; row <= sheet.LastRowNum; row++)
+                    try
                     {
-                        IRow currentRow = sheet.GetRow(row);
-
-                        if (currentRow != null)
+                        for (int row = 1; row <= sheet.LastRowNum; row++)
                         {
-                            var transaction = new Transaction
-                            {
-                                TransactionId = Convert.ToInt32(currentRow.GetCell(0).ToString()),
-                                Status = currentRow.GetCell(1).ToString(),
-                                Type = currentRow.GetCell(2).ToString(),
-                                ClientName = currentRow.GetCell(3).ToString(),
-                                Amount = currentRow.GetCell(4).ToString()
-                            };
+                            IRow currentRow = sheet.GetRow(row);
 
-                            transactions.Add(transaction);
+                            if (currentRow != null)
+                            {
+                                var transaction = new Transaction
+                                {
+                                    TransactionId = Convert.ToInt32(currentRow.GetCell(0).ToString()),
+                                    Status = currentRow.GetCell(1).ToString(),
+                                    Type = currentRow.GetCell(2).ToString(),
+                                    ClientName = currentRow.GetCell(3).ToString(),
+                                    Amount = currentRow.GetCell(4).ToString()
+                                };
+
+                                transactions.Add(transaction);
+                            }
                         }
+                    }
+                    catch (NullReferenceException)
+                    {
+                        return null;
                     }
                 }
             }

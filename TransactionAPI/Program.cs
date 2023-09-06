@@ -13,12 +13,10 @@ builder.Services.AddDbContext<DatabaseContext>(opts =>
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddTransient<TransactionReaderService>();
-builder.Services.AddSingleton<TestService>();
+builder.Services.AddTransient<ITransactionReaderService, TransactionReaderService>();
 
 var app = builder.Build();
 
